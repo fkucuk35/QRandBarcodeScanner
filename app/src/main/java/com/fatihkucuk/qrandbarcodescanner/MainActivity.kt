@@ -16,8 +16,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
+import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 
 class MainActivity : AppCompatActivity() {
     private lateinit var cameraBtn: MaterialButton
@@ -35,17 +38,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraPermissions: Array<String>
     private lateinit var storagePermissions: Array<String>
     private var imageUri: Uri? = null
+    private var barcodeScannerOptions: BarcodeScannerOptions? = null
+    private var barcodeScanner: BarcodeScanner? = null
 
-    val options = BarcodeScannerOptions.Builder()
-        .setBarcodeFormats(
-            Barcode.FORMAT_QR_CODE)
-        .build()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         cameraPermissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
         storagePermissions = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-
+        barcodeScannerOptions = BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS).build()
+        barcodeScanner = BarcodeScanning.getClient(barcodeScannerOptions!!)
         cameraBtn = findViewById(R.id.cameraBtn)
         galleryBtn = findViewById(R.id.galleryBtn)
         imageTv = findViewById(R.id.imageIv)
@@ -71,7 +73,30 @@ class MainActivity : AppCompatActivity() {
         }
 
         scanBtn.setOnClickListener{
-
+            if(imageUri == null){
+                showToast("Pick Image first")
+            }
+            else
+            {
+                detectResultFromImage()
+            }
+        }
+    }
+    private fun detectResultFromImage(){
+        Log.d(TAG, "detectResultFromImage: ")
+        try{
+            val inputImage = InputImage.fromFilePath(this, imageUri!!)
+            val barcodeResult = barcodeScanner!!.process(inputImage)
+                .addOnSuccessListener{ barcodes ->
+                    extractBarcodeQRCodeInfo(barcodes)
+                }.addOnFailureListener{ e->
+                    Log.e(TAG, "detectResultFromImage: ", e)
+                    showToast("Failed scanning due to ${e.message}")
+                }
+        }
+        catch(e: Exception){
+            Log.e(TAG, "detectResultFromImage: ", e)
+            showToast("Failed due to ${e.message}")
         }
     }
     private fun pickImageGallery(){
@@ -167,5 +192,11 @@ class MainActivity : AppCompatActivity() {
     }
     private fun showToast(message: String){
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+    private fun extractBarcodeQRCodeInfo(barcodes: List<Barcode>) {
+        for(barcode in barcodes){
+            val bound = barcode.boundingBox
+            val corners = barcode.cornerPoints
+        }
     }
 }

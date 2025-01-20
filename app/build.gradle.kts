@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.fatihkucuk.qrandbarcodescanner"
-        minSdk = 24
+        minSdk = 28
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -45,6 +45,11 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation("com.google.mlkit:barcode-scanning:17.3.0")
-    implementation ("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1")
+
+    implementation (libs.barcode.scanning)
+
+    implementation(libs.androidx.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
 }
